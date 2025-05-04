@@ -8,6 +8,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// 🛑 Evitar almacenamiento en caché en todas las respuestas
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
 app.post("/openai", async (req, res) => {
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
