@@ -32,7 +32,7 @@ app.post("/openai", async (req, res) => {
   }
 });
 
-// 🎮 Ruta para obtener toda la lista de apps (opcional)
+// 🎮 Ruta opcional: lista completa de apps
 app.get("/steamapps", async (req, res) => {
   try {
     const response = await fetch("https://api.steampowered.com/ISteamApps/GetAppList/v2/");
@@ -44,25 +44,50 @@ app.get("/steamapps", async (req, res) => {
   }
 });
 
-// 🔍 Ruta corregida: buscar por nombre (devuelve results[])
+// 🔍 Ruta principal: búsqueda por nombre, ordenada y filtrada
 app.get("/steam/search", async (req, res) => {
-  const titulo = req.query.title?.toLowerCase()?.replace(/[^a-z0-9]/gi, "") || "";
+  const tituloOriginal = req.query.title || "";
+  const titulo = tituloOriginal.toLowerCase().replace(/[^a-z0-9]/gi, "").trim();
 
-  if (!titulo) return res.status(400).json({ error: "Falta el parámetro 'title'" });
+  if (!titulo) {
+    return res.status(400).json({ error: "Falta el parámetro 'title'" });
+  }
 
   try {
     const response = await fetch("https://api.steampowered.com/ISteamApps/GetAppList/v2/");
     const data = await response.json();
     const apps = data.applist.apps;
 
-    const resultados = apps
-      .filter(app => {
-        const name = app.name?.toLowerCase()?.replace(/[^a-z0-9]/gi, "");
-        return name && name.includes(titulo);
+    const puntuado = apps
+      .map(app => {
+        const raw = app.name || "";
+        const normalizado = raw.toLowerCase().replace(/[^a-z0-9]/gi, "").trim();
+
+        let score = 999;
+        if (normalizado === titulo) score = 0;
+        else if (normalizado.startsWith(titulo)) score = 1;
+        else if (normalizado.includes(titulo)) score = 2;
+
+        return { ...app, score, rawName: raw };
       })
+      .filter(app => {
+        const name = app.rawName.toLowerCase();
+        return (
+          app.score < 999 &&
+          !/dlc|soundtrack|ost/.test(name) && // ❌ excluir estos
+          app.name
+        );
+      })
+      .sort((a, b) => a.score - b.score)
       .slice(0, 10); // máximo 10 resultados
 
-    res.json({ results: resultados });
+    // Log de depuración (no afecta velocidad)
+    console.log("🔍 Resultados para:", tituloOriginal);
+    puntuado.forEach((r, i) => {
+      console.log(`#${i + 1} →`, r.name, `(score: ${r.score})`);
+    });
+
+    res.json({ results: puntuado });
   } catch (err) {
     res.status(500).json({ error: "Error al buscar en Steam", details: err.message });
   }
