@@ -44,7 +44,7 @@ app.get("/steamapps", async (req, res) => {
   }
 });
 
-// 🔍 Nueva ruta: buscar por nombre
+// 🔍 Ruta corregida: buscar por nombre (devuelve results[])
 app.get("/steam/search", async (req, res) => {
   const titulo = req.query.title?.toLowerCase()?.replace(/[^a-z0-9]/gi, "") || "";
 
@@ -55,16 +55,14 @@ app.get("/steam/search", async (req, res) => {
     const data = await response.json();
     const apps = data.applist.apps;
 
-    const match = apps.find(app => {
-      const name = app.name.toLowerCase().replace(/[^a-z0-9]/gi, "");
-      return name.includes(titulo);
-    });
+    const resultados = apps
+      .filter(app => {
+        const name = app.name?.toLowerCase()?.replace(/[^a-z0-9]/gi, "");
+        return name && name.includes(titulo);
+      })
+      .slice(0, 10); // máximo 10 resultados
 
-    if (match) {
-      res.json({ appid: match.appid, name: match.name });
-    } else {
-      res.status(404).json({ error: "No se encontró ninguna coincidencia" });
-    }
+    res.json({ results: resultados });
   } catch (err) {
     res.status(500).json({ error: "Error al buscar en Steam", details: err.message });
   }
