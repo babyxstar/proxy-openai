@@ -16,18 +16,13 @@ app.use((req, res, next) => {
 // 🧠 Ruta GPT
 app.post("/openai", async (req, res) => {
   try {
-    const bodyFinal = {
-      model: req.body.model || "gpt-4o",
-      ...req.body
-    };
-
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Authorization": Bearer ${process.env.OPENAI_API_KEY},
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(bodyFinal),
+      body: JSON.stringify(req.body),
     });
 
     const data = await response.json();
@@ -86,9 +81,10 @@ app.get("/steam/search", async (req, res) => {
       .sort((a, b) => a.score - b.score)
       .slice(0, 10); // máximo 10 resultados
 
+    // Log de depuración (no afecta velocidad)
     console.log("🔍 Resultados para:", tituloOriginal);
     puntuado.forEach((r, i) => {
-      console.log(`#${i + 1} →`, r.name, `(score: ${r.score})`);
+      console.log(#${i + 1} →, r.name, (score: ${r.score}));
     });
 
     res.json({ results: puntuado });
@@ -102,5 +98,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
+  console.log(Servidor en http://localhost:${PORT});
 });
