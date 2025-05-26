@@ -19,7 +19,7 @@ app.post("/openai", async (req, res) => {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": Bearer ${process.env.OPENAI_API_KEY},
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(req.body),
@@ -74,17 +74,17 @@ app.get("/steam/search", async (req, res) => {
         const name = app.rawName.toLowerCase();
         return (
           app.score < 999 &&
-          !/dlc|soundtrack|ost/.test(name) && // ❌ excluir estos
+          !/dlc|soundtrack|ost/.test(name) &&
           app.name
         );
       })
       .sort((a, b) => a.score - b.score)
-      .slice(0, 10); // máximo 10 resultados
+      .slice(0, 10);
 
-    // Log de depuración (no afecta velocidad)
-    console.log("🔍 Resultados para:", tituloOriginal);
+    // Log de depuración
+    console.log(`🔍 Resultados para: ${tituloOriginal}`);
     puntuado.forEach((r, i) => {
-      console.log(#${i + 1} →, r.name, (score: ${r.score}));
+      console.log(`#${i + 1} → ${r.name} (score: ${r.score})`);
     });
 
     res.json({ results: puntuado });
@@ -98,5 +98,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(Servidor en http://localhost:${PORT});
+  console.log(`Servidor en http://localhost:${PORT}`);
 });
